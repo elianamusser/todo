@@ -19,6 +19,7 @@ export default {
         description: this.description,
         deadline: this.deadline,
         priority: this.priority,
+        showUpdateButton: true,
       };
       this.tasks.push(newTask);
 
@@ -30,6 +31,10 @@ export default {
 
       //close dialog
       this.dialog = false;
+    },
+    deleteTask(item) {
+      const toDeleteIndex = this.tasks.indexOf(item)
+      tasks.splice(this.tasks.indexOf(item), 1)
     },
   }
 };
@@ -61,7 +66,12 @@ export default {
           <td>{{ '' + item.description }}</td>
           <td>{{ '' + item.deadline }}</td>
           <td>{{ '' + item.priority }}</td>  
-
+          <!--when checked, delete this object from tasks array-->
+          <td><input type="checkbox" @click="item.showUpdateButton = !item.showUpdateButton"></input></td>
+          <td>
+            <v-btn v-if="item.showUpdateButton">Update</v-btn>
+            <v-btn>Delete</v-btn>
+          </td>
         </tr>
       </tbody>
     </v-table>
@@ -89,8 +99,8 @@ export default {
           </v-card-text>
           <v-card-actions>
             <!-- todo: add functionality -->
-            <v-btn @click="updateTable">Update</v-btn>
-            <v-btn @click="dialog = false">Close</v-btn>
+            <v-btn @click="updateTable">Add</v-btn>
+            <v-btn @click="dialog = false">Cancel</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>
