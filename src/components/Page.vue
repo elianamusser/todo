@@ -1,7 +1,3 @@
-<!-- <script setup>
-import { ref } from 'vue';
-</script> -->
-
 <script>
 export default {
   data() {
@@ -16,26 +12,26 @@ export default {
     };
   },
   methods: {
-    //updateTable() {
+    updateTable() {
     //push newTask object to tasks array
-    /**var newTask = {
+      var newTask = {
         taskName: this.taskName,
         description: this.description,
         deadline: this.deadline,
         priority: this.priority,
       };
-      tasks.push(newTask);
+      this.tasks.push(newTask);
 
       //reset values
-      this.taskName = null;
-      this.description = null;
-      this.deadline = null;
-      this.priority = null; **/
-    //validate inputs with rules
-    //add new row to table
-    //loop thru task array, adding every element to the table
-    //},
-  },
+      this.taskName = '';
+      this.description = '';
+      this.deadline = '';
+      this.priority = ''; 
+
+      //close dialog
+      this.dialog = false;
+    },
+  }
 };
 </script>
 
@@ -61,10 +57,11 @@ export default {
       </thead>
       <tbody>
         <tr v-for="item in tasks">
-          <td>{{ item.taskName }}</td>
-          <td>{{ item.description }}</td>
-          <td>{{ item.deadline }}</td>
-          <td>{{ item.priority }}</td>
+          <td>{{ '' + item.taskName }}</td>
+          <td>{{ '' + item.description }}</td>
+          <td>{{ '' + item.deadline }}</td>
+          <td>{{ '' + item.priority }}</td>  
+
         </tr>
       </tbody>
     </v-table>
@@ -76,22 +73,23 @@ export default {
         <v-card-title>Add Task</v-card-title>
         <v-form>
           <v-card-text>
-            <v-text-field label="Title" id="title"></v-text-field>
-            <v-text-field label="Description" id="description"></v-text-field>
+            <v-text-field label="Title" id="title" v-model="taskName"></v-text-field>
+            <v-text-field label="Description" id="description" v-model="description"></v-text-field>
             <v-text-field
               label="Deadline"
               id="deadline"
               type="date"
+              v-model="deadline"
             ></v-text-field>
             <v-radio-group>
-              <v-radio label="Low" value="low"></v-radio>
-              <v-radio label="Medium" value="medium"></v-radio>
-              <v-radio label="High" value="high"></v-radio>
-            </v-radio-group>
+              <v-radio label="Low" value="low" @click="priority = 'Low'"></v-radio>
+              <v-radio label="Medium" value="medium" @click="priority = 'Medium'"></v-radio>
+              <v-radio label="High" value="high" @click="priority = 'High'"></v-radio>
+            </v-radio-group> 
           </v-card-text>
           <v-card-actions>
             <!-- todo: add functionality -->
-            <v-btn>Update</v-btn>
+            <v-btn @click="updateTable">Update</v-btn>
             <v-btn @click="dialog = false">Close</v-btn>
           </v-card-actions>
         </v-form>
