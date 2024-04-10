@@ -1,40 +1,86 @@
+<script setup>
+import InputForm from "./InputForm.vue"
+</script>
+
 <script>
+class Task {
+  constructor(taskName, description, deadline, priority) {
+    this.taskName = taskName;
+    this.description = description;
+    this.deadline = deadline;
+    this.priority = priority;
+    this.showUpdateButton = true;
+  }
+}
+
 export default {
   data() {
     return {
-      dialog: false,
-      taskName: '',
-      description: '',
-      deadline: '',
-      priority: '',
-      tasks: [],
-      radios: null,
+      updateDialog: false,  //whether to show the dialog to update a task
+      addDialog: false,   //whether to show the dialog to add a task
+
+      taskToEdit: null,   //the task currently being edited
+
+      //rules for required user inputs
+      required: [(value) => (!!value || 'This field is required')],
+      
+      unique: [   //rules for user inputs that must be unique in the task list
+        (value) => {
+          for(const i = 0; i < this.tasks.length; i++) {
+            if(tasks[i].value === value) {
+              return 'This field must be unique in the task list.'
+            }
+          }
+          return true;
+        }
+      ],
+
+      taskName: '',    //the currently saved taskName (the most recently entered)
+      description: '',  //the currently saved description
+      deadline: '',   //the currently saved deadline
+      priority: '',   //the currently saved priority
+      tasks: [],  //list of task objects
     };
   },
+  computed: {
+    showDialog() {
+      return this.addDialog || this.updateDialog;
+    },
+  },
   methods: {
-    updateTable() {
-    //push newTask object to tasks array
-      var newTask = {
-        taskName: this.taskName,
-        description: this.description,
-        deadline: this.deadline,
-        priority: this.priority,
-        showUpdateButton: true,
-      };
-      this.tasks.push(newTask);
-
-      //reset values
+    //clear all form flags and data
+    clearForm() {
+      this.addDialog = false;
+      this.updateDialog = false;
       this.taskName = '';
       this.description = '';
       this.deadline = '';
       this.priority = ''; 
-
-      //close dialog
-      this.dialog = false;
     },
-    deleteTask(item) {
-      const toDeleteIndex = this.tasks.indexOf(item)
-      tasks.splice(this.tasks.indexOf(item), 1)
+    addTask() {
+    //push newTask object to tasks array
+      const newTask = new Task(
+        this.taskName,
+        this.description,
+        this.deadline,
+        this.priority,
+      );
+      this.tasks.push(newTask);
+
+      this.clearForm();
+    },
+    editTask() {
+      if(taskToEdit == null) {
+        throw new Error("Edit task operation failed")
+      }
+
+      this.taskToEdit.description = this.description
+      this.taskToEdit.deadline = this.deadline
+      this.taskToEdit.priority = this.priority
+    },
+    deleteTask(task) {
+      const taskIndex = this.tasks.indexOf(task)
+      this.tasks.splice(taskIndex, 1)
     },
   }
 };
@@ -43,7 +89,7 @@ export default {
 <template>
   <v-app>
     <v-toolbar title="Frameworks">
-      <v-btn @click="dialog = true">
+      <v-btn @click="addDialog = true">
         <v-icon>mdi-open-in-new</v-icon>
         <span>Add</span>
       </v-btn>
@@ -66,45 +112,61 @@ export default {
           <td>{{ '' + item.description }}</td>
           <td>{{ '' + item.deadline }}</td>
           <td>{{ '' + item.priority }}</td>  
-          <!--when checked, delete this object from tasks array-->
+          <!-- when checked, delete this object from tasks array -->
           <td><input type="checkbox" @click="item.showUpdateButton = !item.showUpdateButton"></input></td>
           <td>
-            <v-btn v-if="item.showUpdateButton">Update</v-btn>
-            <v-btn>Delete</v-btn>
+            <v-btn v-if="item.showUpdateButton" @click="updateDialog = true, taskToEdit = item">Update</v-btn>
+            <v-btn @click="deleteTask(item)">Delete</v-btn>
           </td>
         </tr>
       </tbody>
     </v-table>
 
-    <!--dialog-->
-    <!--todo: move to own component-->
-    <v-dialog v-model="dialog">
+    <v-dialog v-model="showDialog">
       <v-card>
-        <v-card-title>Add Task</v-card-title>
-        <v-form>
+        <v-card-title v-if="addDialog">Add Task</v-card-title>
+        <v-card-title v-if="updateDialog">Edit Task</v-card-title>
+        <!--on submit: if this is an add dialog, add the task. otherwise, edit it-->
+        <v-form @submit.prevent="(addDialog) ? addTask() : editTask()">
           <v-card-text>
-            <v-text-field label="Title" id="title" v-model="taskName"></v-text-field>
-            <v-text-field label="Description" id="description" v-model="description"></v-text-field>
+            <!--task name must be unique-->
+            <v-text-field 
+              v-if="addDialog" 
+              label="Title" 
+              id="title" 
+              v-model="taskName" 
+              :rules="unique"
+            ></v-text-field>
+            <v-text-field 
+              label="Description" 
+              id="description" 
+              v-model="description"
+              :rules="required"
+            ></v-text-field>
             <v-text-field
               label="Deadline"
               id="deadline"
               type="date"
               v-model="deadline"
+              :rules="required"
             ></v-text-field>
-            <v-radio-group>
-              <v-radio label="Low" value="low" @click="priority = 'Low'"></v-radio>
-              <v-radio label="Medium" value="medium" @click="priority = 'Medium'"></v-radio>
-              <v-radio label="High" value="high" @click="priority = 'High'"></v-radio>
+            <p>Priority: {{ priority }}</p>
+            <v-radio-group v-model="priority" :rules="required">
+              <!-- <input type="radio" value="low">Low</input>
+              <input type="radio" value="low">Med</input>
+              <input type="radio" value="low">High</input> -->
+              <v-radio label="Low" value="low"></v-radio>
+              <v-radio label="Medium" value="medium"></v-radio>
+              <v-radio label="High" value="high"></v-radio>
             </v-radio-group> 
-          </v-card-text>
-          <v-card-actions>
-            <!-- todo: add functionality -->
-            <v-btn @click="updateTable">Add</v-btn>
-            <v-btn @click="dialog = false">Cancel</v-btn>
-          </v-card-actions>
+          </v-card-text> 
+            <v-btn type="submit" v-if="addDialog">Add</v-btn>
+            <v-btn type="submit" v-if="updateDialog">Edit</v-btn>
+            <v-btn @click="clearForm">Cancel</v-btn>
         </v-form>
       </v-card>
     </v-dialog>
+
   </v-app>
 </template>
 

@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import { createVuetify } from 'vuetify';
 import App from './App.vue';
 
+
 import './assets/main.css';
 
 import * as components from 'vuetify/components';
