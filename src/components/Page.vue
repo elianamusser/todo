@@ -1,5 +1,9 @@
+<script setup>
+import toastr from 'toastr';
+import 'toastr/build/toastr.css'
+</script>
+
 <script>
-const errorMsgs = [];
 export default {
   data() {
     return {
@@ -47,29 +51,25 @@ export default {
     },
     validAdd() {  //valid inputs for add operation
       const allFieldsFilled = (this.taskName) && (this.description) && (this.deadline) && (this.priority)
-      //todo - check for uniqueness
-      const unique = true;
-      for(const task of this.tasks) {
-        if(task.taskName === this.taskName) {
-          unique = false;
-        }
-      }
-      return allFieldsFilled && unique
+      return allFieldsFilled && this.uniqueTaskName(this.taskName)
     },
     submit() {
       if(this.addDialog && this.validAdd()) {
         this.addTask();
         this.clearForm();
-      }
-      else if(this.addDialog) {   //an invalid add operation
-        //todo - error toaster
+        toastr.success("Task added successfully")
       }
       else if(this.updateDialog) {
         this.editTask();
         this.clearForm();
+        toastr.success("Task updated successfully")
+      }
+      else {   //an invalid add operation
+        throw new Error("Add operation failed")
       }
     },
     addTask() {
+      //push a newTask object to the tasks array
       var newTask = {
         taskName: this.taskName,
         description: this.description,
@@ -81,6 +81,7 @@ export default {
     },
     editTask() {
       //todo - reduce code repetition?
+      //if any fields were entered, update them in the table
       if(this.description) {
         this.taskToEdit.description = this.description
       }
@@ -94,6 +95,7 @@ export default {
     deleteTask(task) {
       const taskIndex = this.tasks.indexOf(task)
       this.tasks.splice(taskIndex, 1)
+      toastr.success("Task deleted successfully")
     },
   }
 };
@@ -101,9 +103,13 @@ export default {
 
 <template>
   <v-app>
-    <v-toolbar title="Frameworks">
-      <v-btn @click="addDialog = true">
-        <v-icon>mdi-open-in-new</v-icon>
+    <v-toolbar color="primary">
+      <v-toolbar-title id="title">
+        <v-icon icon="fa-solid fa-bars" size="x-small"></v-icon>
+        FRAMEWORKS
+      </v-toolbar-title>
+      <v-btn elevation="8" @click="addDialog = true">
+        <v-icon icon="fa:fas fa-plus"></v-icon>
         <span>Add</span>
       </v-btn>
     </v-toolbar>
@@ -128,8 +134,17 @@ export default {
           <!-- when checked, delete this object from tasks array -->
           <td><input type="checkbox" @click="item.showUpdateButton = !item.showUpdateButton"></input></td>
           <td>
-            <v-btn v-if="item.showUpdateButton" @click="updateDialog = true, taskToEdit = item">Update</v-btn>
-            <v-btn @click="deleteTask(item)">Delete</v-btn>
+            <v-btn 
+              v-if="item.showUpdateButton" 
+              color="primary" 
+              prepend-icon="fa-solid fa-pen-to-square"
+              @click="updateDialog = true, taskToEdit = item"
+            > Update </v-btn>
+            <v-btn 
+              color="red"
+              prepend-icon="fa-solid fa-ban"
+              @click="deleteTask(item)"
+            > Delete </v-btn>
           </td>
         </tr>
       </tbody>
@@ -137,15 +152,23 @@ export default {
 
     <v-dialog v-model="showDialog">
       <v-card>
-        <v-card-title v-if="addDialog">Add Task</v-card-title>
-        <v-card-title v-if="updateDialog">Edit Task</v-card-title>
-        <v-form @submit.prevent="submit">
+        <v-toolbar color="primary">
+          <v-card-title v-if="addDialog">
+            <v-icon icon="fa:fas fa-plus"></v-icon>
+            Add Task
+          </v-card-title>
+          <v-card-title v-if="updateDialog">
+            <v-icon icon="fa-solid fa-pen-to-square" size="x-small"></v-icon>
+            Edit Task
+          </v-card-title>
+        </v-toolbar>
+        <v-form validate-on="submit" @submit.prevent="submit">
           <v-card-text>
             <!--task name must be unique-->
             <v-text-field 
               v-if="addDialog" 
               label="Title" 
-              id="title" 
+              id="taskName" 
               v-model="taskName" 
               :rules="requiredTitle"
             ></v-text-field>
@@ -162,16 +185,21 @@ export default {
               v-model="deadline"
               :rules="required"
             ></v-text-field>
+            <v-spacer></v-spacer>
             <p>Priority: {{ priority }}</p>
-            <v-radio-group v-model="priority" :rules="required">
+            <v-radio-group inline v-model="priority" :rules="required">
               <v-radio label="Low" value="low"></v-radio>
               <v-radio label="Medium" value="medium"></v-radio>
               <v-radio label="High" value="high"></v-radio>
             </v-radio-group> 
+            <v-btn type="submit" color="primary" prepend-icon="fa-solid fa-plus" v-if="addDialog">
+              Add
+            </v-btn>
+            <v-btn type="submit" color="primary" prepend-icon="fa-solid fa-pen-to-square" v-if="updateDialog">
+              Edit
+            </v-btn>
+            <v-btn @click="clearForm" color="red" prepend-icon="fa-solid fa-ban">Cancel</v-btn>
           </v-card-text> 
-            <v-btn type="submit" v-if="addDialog">Add</v-btn>
-            <v-btn type="submit" v-if="updateDialog">Edit</v-btn>
-            <v-btn @click="clearForm">Cancel</v-btn>
         </v-form>
       </v-card>
     </v-dialog>
@@ -180,14 +208,17 @@ export default {
 </template>
 
 <style>
+
 #add {
   right: 10px;
 }
-#title {
-  left: 10px;
-}
+
 v-toolbar {
   position: absolute;
   top: 10px;
+}
+
+#title {
+  text-align: center;
 }
 </style>
