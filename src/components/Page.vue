@@ -9,6 +9,10 @@ export default {
       taskToEdit: null,   //the task currently being edited
 
       required: [value => (!!value) || 'This field is required'], //rule for required input
+      requiredTitle: [
+        value => (!!value) || 'This field is required',
+        value => this.uniqueTaskName(value) || 'The title must be unique',
+      ],
 
       taskName: '',    //the currently saved taskName (the most recently entered)
       description: '',  //the currently saved description
@@ -21,14 +25,17 @@ export default {
     showDialog() {
       return this.addDialog || this.updateDialog;
     },
-    // valid() {
-    //   const allFieldsFilled = (this.taskName) && (this.description) && (this.deadline) && (this.priority)
-    //   //todo check for uniqueness
-    //   const unique = true;
-    //   return allFieldsFilled && unique
-    // },
   },
-  methods: {
+  methods: {   
+    //returns whether the taskName of the given task is unique
+    uniqueTaskName(task) {
+      for(const task of this.tasks) {
+        if(task.taskName === this.taskName) {
+          return false;
+        }
+      }
+      return true
+    },
     //clear all form flags and data
     clearForm() {
       this.addDialog = false;
@@ -42,6 +49,11 @@ export default {
       const allFieldsFilled = (this.taskName) && (this.description) && (this.deadline) && (this.priority)
       //todo - check for uniqueness
       const unique = true;
+      for(const task of this.tasks) {
+        if(task.taskName === this.taskName) {
+          unique = false;
+        }
+      }
       return allFieldsFilled && unique
     },
     submit() {
@@ -135,7 +147,7 @@ export default {
               label="Title" 
               id="title" 
               v-model="taskName" 
-              :rules="required"
+              :rules="requiredTitle"
             ></v-text-field>
             <v-text-field 
               label="Description" 
