@@ -162,8 +162,8 @@ export default {
             Edit Task
           </v-card-title>
         </v-toolbar>
+        <v-card-text>
         <v-form validate-on="submit" @submit.prevent="submit">
-          <v-card-text>
             <!--task name must be unique-->
             <v-text-field 
               v-if="addDialog" 
@@ -199,8 +199,8 @@ export default {
               Edit
             </v-btn>
             <v-btn @click="clearForm" color="red" prepend-icon="fa-solid fa-ban">Cancel</v-btn>
+          </v-form>
           </v-card-text> 
-        </v-form>
       </v-card>
     </v-dialog>
 
