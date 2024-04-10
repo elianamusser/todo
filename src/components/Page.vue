@@ -3,16 +3,7 @@ import InputForm from "./InputForm.vue"
 </script>
 
 <script>
-class Task {
-  constructor(taskName, description, deadline, priority) {
-    this.taskName = taskName;
-    this.description = description;
-    this.deadline = deadline;
-    this.priority = priority;
-    this.showUpdateButton = true;
-  }
-}
-
+const errorMsgs = [];
 export default {
   data() {
     return {
@@ -21,19 +12,7 @@ export default {
 
       taskToEdit: null,   //the task currently being edited
 
-      //rules for required user inputs
-      required: [(value) => (!!value || 'This field is required')],
-      
-      unique: [   //rules for user inputs that must be unique in the task list
-        (value) => {
-          for(const i = 0; i < this.tasks.length; i++) {
-            if(tasks[i].value === value) {
-              return 'This field must be unique in the task list.'
-            }
-          }
-          return true;
-        }
-      ],
+      required: [value => (!!value) || 'This field is required'], //required rules
 
       taskName: '',    //the currently saved taskName (the most recently entered)
       description: '',  //the currently saved description
@@ -46,6 +25,12 @@ export default {
     showDialog() {
       return this.addDialog || this.updateDialog;
     },
+    // valid() {
+    //   const allFieldsFilled = (this.taskName) && (this.description) && (this.deadline) && (this.priority)
+    //   //todo check for uniqueness
+    //   const unique = true;
+    //   return allFieldsFilled && unique
+    // },
   },
   methods: {
     //clear all form flags and data
@@ -57,17 +42,30 @@ export default {
       this.deadline = '';
       this.priority = ''; 
     },
+    valid() {
+      const allFieldsFilled = (this.taskName) && (this.description) && (this.deadline) && (this.priority)
+      //todo check for uniqueness
+      const unique = true;
+      return allFieldsFilled && unique
+    },
+    submit() {
+      if(this.valid()) {
+        this.addDialog ? this.addTask() : this.editTask()
+        this.clearForm();
+      } //if not valid, do nothing
+      else {
+        toastr["error"]("Form submission errors")
+      }
+    },
     addTask() {
-    //push newTask object to tasks array
-      const newTask = new Task(
-        this.taskName,
-        this.description,
-        this.deadline,
-        this.priority,
-      );
+      var newTask = {
+        taskName: this.taskName,
+        description: this.description,
+        deadline: this.deadline,
+        priority: this.priority,
+        showUpdateButton: true,
+      };
       this.tasks.push(newTask);
-
-      this.clearForm();
     },
     editTask() {
       if(taskToEdit == null) {
@@ -126,8 +124,14 @@ export default {
       <v-card>
         <v-card-title v-if="addDialog">Add Task</v-card-title>
         <v-card-title v-if="updateDialog">Edit Task</v-card-title>
-        <!--on submit: if this is an add dialog, add the task. otherwise, edit it-->
-        <v-form @submit.prevent="(addDialog) ? addTask() : editTask()">
+
+        <!--todo - remove-->
+        Taskname: {{ this.taskName}}
+        Description: {{this.description}}
+        Update: {{ updateDialog }}
+        Add: {{ addDialog }}
+        {{ valid ? 'valid true' : 'valid false' }}
+        <v-form @submit.prevent="submit">
           <v-card-text>
             <!--task name must be unique-->
             <v-text-field 
@@ -135,7 +139,7 @@ export default {
               label="Title" 
               id="title" 
               v-model="taskName" 
-              :rules="unique"
+              :rules="required"
             ></v-text-field>
             <v-text-field 
               label="Description" 
@@ -152,9 +156,6 @@ export default {
             ></v-text-field>
             <p>Priority: {{ priority }}</p>
             <v-radio-group v-model="priority" :rules="required">
-              <!-- <input type="radio" value="low">Low</input>
-              <input type="radio" value="low">Med</input>
-              <input type="radio" value="low">High</input> -->
               <v-radio label="Low" value="low"></v-radio>
               <v-radio label="Medium" value="medium"></v-radio>
               <v-radio label="High" value="high"></v-radio>

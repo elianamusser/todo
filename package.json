@@ -9,7 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "jquery": "^3.7.1",
     "pinia": "^2.1.7",
+    "toastr": "^2.1.4",
     "vue": "^3.4.21",
     "vuetify": "^3.5.13"
   },
