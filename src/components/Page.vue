@@ -1,7 +1,3 @@
-<script setup>
-import InputForm from "./InputForm.vue"
-</script>
-
 <script>
 const errorMsgs = [];
 export default {
@@ -12,7 +8,7 @@ export default {
 
       taskToEdit: null,   //the task currently being edited
 
-      required: [value => (!!value) || 'This field is required'], //required rules
+      required: [value => (!!value) || 'This field is required'], //rule for required input
 
       taskName: '',    //the currently saved taskName (the most recently entered)
       description: '',  //the currently saved description
@@ -42,19 +38,23 @@ export default {
       this.deadline = '';
       this.priority = ''; 
     },
-    valid() {
+    validAdd() {  //valid inputs for add operation
       const allFieldsFilled = (this.taskName) && (this.description) && (this.deadline) && (this.priority)
-      //todo check for uniqueness
+      //todo - check for uniqueness
       const unique = true;
       return allFieldsFilled && unique
     },
     submit() {
-      if(this.valid()) {
-        this.addDialog ? this.addTask() : this.editTask()
+      if(this.addDialog && this.validAdd()) {
+        this.addTask();
         this.clearForm();
-      } //if not valid, do nothing
-      else {
-        toastr["error"]("Form submission errors")
+      }
+      else if(this.addDialog) {   //an invalid add operation
+        //todo - error toaster
+      }
+      else if(this.updateDialog) {
+        this.editTask();
+        this.clearForm();
       }
     },
     addTask() {
@@ -68,13 +68,16 @@ export default {
       this.tasks.push(newTask);
     },
     editTask() {
-      if(taskToEdit == null) {
-        throw new Error("Edit task operation failed")
+      //todo - reduce code repetition?
+      if(this.description) {
+        this.taskToEdit.description = this.description
       }
-
-      this.taskToEdit.description = this.description
-      this.taskToEdit.deadline = this.deadline
-      this.taskToEdit.priority = this.priority
+      if(this.deadline) {
+        this.taskToEdit.deadline = this.deadline
+      }
+      if(this.priority) {
+        this.taskToEdit.priority = this.priority
+      }
     },
     deleteTask(task) {
       const taskIndex = this.tasks.indexOf(task)
@@ -124,13 +127,6 @@ export default {
       <v-card>
         <v-card-title v-if="addDialog">Add Task</v-card-title>
         <v-card-title v-if="updateDialog">Edit Task</v-card-title>
-
-        <!--todo - remove-->
-        Taskname: {{ this.taskName}}
-        Description: {{this.description}}
-        Update: {{ updateDialog }}
-        Add: {{ addDialog }}
-        {{ valid ? 'valid true' : 'valid false' }}
         <v-form @submit.prevent="submit">
           <v-card-text>
             <!--task name must be unique-->
